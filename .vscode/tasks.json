@@ -1,0 +1,114 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "▶️ Run API",
+      "command": "dotnet",
+      "type": "shell",
+      "args": ["run"],
+      "options": {
+        "cwd": "${workspaceFolder}/Portfolio.API"
+      },
+      "problemMatcher": "$msCompile",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always"
+      }
+    },
+    {
+      "label": "🏗️ Build API",
+      "command": "dotnet",
+      "type": "shell",
+      "args": ["build"],
+      "options": {
+        "cwd": "${workspaceFolder}/Portfolio.API"
+      },
+      "problemMatcher": "$msCompile",
+      "group": "build",
+      "presentation": {
+        "reveal": "always"
+      }
+    },
+    {
+      "label": "🚀 Run Angular UI",
+      "command": "npm",
+      "type": "shell",
+      "args": ["start"],
+      "options": {
+        "cwd": "${workspaceFolder}/Portfolio.UI"
+      },
+      "isBackground": true,
+      "problemMatcher": {
+        "pattern": {
+          "regexp": ".*",
+          "file": 1,
+          "location": 2,
+          "message": 3
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^.*ng serve.*",
+          "endsPattern": "^.*Application bundle generated.*"
+        }
+      },
+      "presentation": {
+        "reveal": "always"
+      }
+    },
+    {
+      "label": "📦 Install Dependencies",
+      "command": "npm",
+      "type": "shell",
+      "args": ["install"],
+      "options": {
+        "cwd": "${workspaceFolder}/Portfolio.UI"
+      },
+      "presentation": {
+        "reveal": "always"
+      }
+    },
+    {
+      "label": "🗄️ Update Database",
+      "command": "dotnet",
+      "type": "shell",
+      "args": ["ef", "database", "update"],
+      "options": {
+        "cwd": "${workspaceFolder}/Portfolio.Infrastructure"
+      },
+      "problemMatcher": "$msCompile",
+      "presentation": {
+        "reveal": "always"
+      }
+    },
+    {
+      "label": "⚙️ Run TaskManager API (CyberJet)",
+      "command": "dotnet",
+      "type": "shell",
+      "args": ["run"],
+      "options": {
+        "cwd": "E:\\CyberJet\\TaskManagerAPI"
+      },
+      "problemMatcher": "$msCompile",
+      "presentation": {
+        "reveal": "always"
+      }
+    },
+    {
+      "label": "🏗️ Build TaskManager API",
+      "command": "dotnet",
+      "type": "shell",
+      "args": ["build"],
+      "options": {
+        "cwd": "E:\\CyberJet\\TaskManagerAPI"
+      },
+      "problemMatcher": "$msCompile",
+      "group": "build",
+      "presentation": {
+        "reveal": "always"
+      }
+    }
+  ]
+}

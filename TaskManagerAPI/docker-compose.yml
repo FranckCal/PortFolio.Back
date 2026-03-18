@@ -1,0 +1,88 @@
+version: '3.9'
+
+services:
+  # ====== SQL SERVER - Base de données TaskManager ======
+  sql-server:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: taskmanager-sql
+    environment:
+      SA_PASSWORD: ${SQL_SA_PASSWORD:-TaskManagerPassword@123}
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: "Developer"
+    ports:
+      - "1434:1433"  # Port différent pour éviter conflit avec Portfolio
+    volumes:
+      - taskmanager-sql-data:/var/opt/mssql
+      - ./sql-init:/docker-entrypoint-initdb.d
+    networks:
+      - taskmanager-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "/opt/mssql-tools18/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "${SQL_SA_PASSWORD:-TaskManagerPassword@123}", "-Q", "SELECT 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ====== REDIS - Cache TaskManager ======
+  redis:
+    image: redis:7-alpine
+    container_name: taskmanager-redis
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-taskmanager_redis_password}
+    ports:
+      - "6380:6379"  # Port différent
+    volumes:
+      - taskmanager-redis-data:/data
+    networks:
+      - taskmanager-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ====== TASKMANAGER API - .NET 8 ======
+  taskmanager-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: taskmanager-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ENVIRONMENT:-Production}
+      ASPNETCORE_URLS: http://+:5001
+      DatabaseSettings__ConnectionString: "Server=sql-server,1433;Database=TaskManagerDB;User Id=sa;Password=${SQL_SA_PASSWORD:-TaskManagerPassword@123};TrustServerCertificate=true;"
+      Redis__ConnectionString: "redis:6379,password=${REDIS_PASSWORD:-taskmanager_redis_password}"
+      JwtSettings__SecretKey: ${JWT_SECRET_KEY:-TaskManagerSecret2026!@#$%^&*()}
+      JwtSettings__Issuer: "TaskManagerAPI"
+      JwtSettings__Audience: "TaskManagerApp"
+      JwtSettings__ExpirationMinutes: "60"
+      CORS__AllowedOrigins__0: "https://api.taskmanager.com"
+      CORS__AllowedOrigins__1: "http://localhost:5001"
+    ports:
+      - "5001:5001"
+    depends_on:
+      sql-server:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - taskmanager-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+# ====== NETWORKS ======
+networks:
+  taskmanager-network:
+    driver: bridge
+
+# ====== VOLUMES ======
+volumes:
+  taskmanager-sql-data:
+    driver: local
+  taskmanager-redis-data:
+    driver: local
